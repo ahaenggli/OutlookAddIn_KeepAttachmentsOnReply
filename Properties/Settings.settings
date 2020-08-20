@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="KeepAttachmentsOnReply.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="LastUpdateCheck" Type="System.DateTime" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="UpdateUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://github.com/ahaenggli/OutlookAddIn_KeepAttachmentsOnReply/releases/latest/download/OutlookAddIn_KeepAttachmentsOnReply.zip</Value>
+    </Setting>
+    <Setting Name="VersionUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://api.github.com/repos/ahaenggli/OutlookAddIn_KeepAttachmentsOnReply/releases/latest</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<customUI onLoad="Ribbon_Load" xmlns="http://schemas.microsoft.com/office/2006/01/customui">
+    <ribbon>
+        <tabs>
+            <tab idMso="TabMail">
+                <group id="group1" label="Anhänge">
+                    <button id="button1" onAction="OnButton1" label="Fehlende ermitteln" showImage="false" />
+                </group>
+            </tab>
+            <tab idMso="TabNewMailMessage">
+                <group id="group2" label="Anhänge">
+                    <button id="button2" onAction="OnButton1" label="Fehlende ermitteln" showImage="false" />
+                </group>
+            </tab>
+            <tab idMso="TabReadMessage">
+                <group id="group3" label="Anhänge">
+                    <button id="button3" onAction="OnButton1" label="Fehlende ermitteln" showImage="false" />
+                </group>
+            </tab>
+        </tabs>
+     <contextualTabs>
+       <tabSet idMso="TabComposeTools">
+            <tab idMso="TabMessage">
+                <group id="group4" label="Anhänge">
+                    <button id="button4" onAction="OnButton1" label="Fehlende ermitteln" showImage="false" />
+                </group>
+            </tab>
+       </tabSet>
+   </contextualTabs>
+    </ribbon>
+</customUI>
