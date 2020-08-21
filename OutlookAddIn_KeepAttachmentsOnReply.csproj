@@ -33,7 +33,7 @@
     <PublishUrl>\\asyn\web\PlugIn\outlook\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.3.4</ApplicationVersion>
+    <ApplicationVersion>1.0.5.1</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>

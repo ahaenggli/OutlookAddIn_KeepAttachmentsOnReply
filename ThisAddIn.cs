@@ -2,6 +2,7 @@
 using Microsoft.Office.Interop.Outlook;
 using System;
 using System.Deployment.Application;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
@@ -17,7 +18,9 @@ namespace KeepAttachmentsOnReply
     {
 
         private static readonly string tmpDir = Path.GetTempPath() + "OutlookAddIn_KeepAttachmentsOnReply" + Path.DirectorySeparatorChar.ToString();
-
+        private Outlook.Inspectors inspectors;
+        private Outlook.Explorer explorers;
+        private Outlook.Application app;
         /// <summary>
         /// add menu items to ribbon bars
         /// </summary>
@@ -35,21 +38,12 @@ namespace KeepAttachmentsOnReply
         /// <param name="e"></param>
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
-            //Background for better performance
-            Thread worker = new Thread(Init)
-            {
-                IsBackground = true
-            };
-            worker.Start();
-        }
+            app = this.Application;
+            inspectors = this.Application.Inspectors;
+            explorers = this.Application.ActiveExplorer();
 
-        /// <summary>
-        /// initialize AddIn, called in background from Startup
-        /// </summary>  
-        private void Init()
-        {
-            Application.Inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
-            Application.ActiveExplorer().InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(parseItem);
+            inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
+            explorers.InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(parseItem);
 
             //update vsto/clickonce directory in background
             Thread worker = new Thread(Update)
@@ -103,14 +97,36 @@ namespace KeepAttachmentsOnReply
                         {
                             // keep attachments from original mail
                             // get selected item (reply is open, so this should be the original mail) 
-                            if (Application.ActiveExplorer().Selection.Count == 1)
+                            MailItem src = null;
+                            if (app.ActiveWindow() is Outlook.Explorer)
                             {
-                                object selectedItem = Application.ActiveExplorer().Selection[1];
-                                if (selectedItem is Outlook.MailItem)
+                                //Debug.WriteLine("Explorer");
+
+                                if (Application.ActiveExplorer().Selection.Count == 1)
                                 {
-                                    addParentAttachments(mailItem, selectedItem as Outlook.MailItem);
+                                    object selectedItem = Application.ActiveExplorer().Selection[1];
+                                    if (selectedItem is Outlook.MailItem)
+                                    {
+                                        src = selectedItem as Outlook.MailItem;
+                                    }
                                 }
                             }
+                            else
+                            if (app.ActiveWindow() is Outlook.Inspector)
+                            {
+                                //Debug.WriteLine("Inspector");
+
+                                object selectedItem = Application.ActiveInspector().CurrentItem;
+                                if (selectedItem is Outlook.MailItem)
+                                {
+                                    src = selectedItem as Outlook.MailItem;
+                                }
+
+                            }
+
+                            if (src != null)
+                                addParentAttachments(mailItem, src);
+
                         }
                     }
                 }
@@ -155,7 +171,7 @@ namespace KeepAttachmentsOnReply
                                 // add tmp file as new attachment to the reply mail
                                 newMail.Attachments.Add(tmp, Outlook.OlAttachmentType.olByValue, 1, attachment.DisplayName);
                                 // save replay mail
-                                newMail.Save();
+                                //newMail.Save();
                                 // delete tmp file
                                 File.Delete(tmp);
                             }
