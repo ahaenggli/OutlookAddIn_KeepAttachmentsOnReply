@@ -1,13 +1,9 @@
 ﻿using Microsoft.Office.Interop.Outlook;
-using Microsoft.Office.Tools.Ribbon;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
@@ -40,8 +36,16 @@ namespace KeepAttachmentsOnReply
 
         private void getAttachmentsFromConversation(MailItem dest, MailItem search, int lvl)
         {
-            if (dest == null) return;
-            if (countAttachements(dest) > 0) return;
+            if (dest == null)
+            {
+                return;
+            }
+
+            if (countAttachements(dest) > 0)
+            {
+                return;
+            }
+
             System.Collections.Generic.Stack<MailItem> st = new System.Collections.Generic.Stack<MailItem>();
 
             // Cast selectedItem to MailItem. 
@@ -80,7 +84,9 @@ namespace KeepAttachmentsOnReply
                             Debug.WriteLine(mail.ReceivedByEntryID);
 
                             if (mail.EntryID != null && (mail.Sender != null || mail.ReceivedByEntryID != null))
+                            {
                                 st.Push(mail);
+                            }
                         }
                         // Call EnumerateConversation 
                         // to access child nodes of root items. 
@@ -91,7 +97,7 @@ namespace KeepAttachmentsOnReply
 
             while (st.Count > 0)
             {
-                var it = st.Pop();
+                MailItem it = st.Pop();
                 if (countAttachements(it) > 0)
                 {
                     Debug.WriteLine(countAttachements(it));
@@ -114,7 +120,7 @@ namespace KeepAttachmentsOnReply
                     foreach (Attachment attachment in mailItem.Attachments)
                     {
                         // flags to check whether the attachment is embedded (inline) or not
-                        var flags = attachment.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x37140003");
+                        dynamic flags = attachment.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x37140003");
 
                         // ignore embedded attachment...
                         if (flags != 4)
@@ -130,7 +136,8 @@ namespace KeepAttachmentsOnReply
             }
             return cnt;
         }
-        void EnumerateConversation(System.Collections.Generic.Stack<MailItem> st, object item, Outlook.Conversation conversation)
+
+        private void EnumerateConversation(System.Collections.Generic.Stack<MailItem> st, object item, Outlook.Conversation conversation)
         {
             Outlook.SimpleItems items =
             conversation.GetChildren(item);
@@ -152,7 +159,9 @@ namespace KeepAttachmentsOnReply
                         Debug.WriteLine(mailItem.ReceivedByEntryID);
 
                         if (mailItem.EntryID != null && (mailItem.Sender != null || mailItem.ReceivedByEntryID != null))
+                        {
                             st.Push(mailItem);
+                        }
                     }
                     // Continue recursion. 
                     EnumerateConversation(st, myItem, conversation);
@@ -163,10 +172,13 @@ namespace KeepAttachmentsOnReply
         public void OnButton1(Office.IRibbonControl e)
         {
             MailItem mailItem = null;
-            var m = e.Context as Inspector;
+            Inspector m = e.Context as Inspector;
 
             // single email opend 
-            if (m != null) mailItem = m.CurrentItem as MailItem;
+            if (m != null)
+            {
+                mailItem = m.CurrentItem as MailItem;
+            }
             else
             {
                 object selectedItem = Globals.ThisAddIn.Application.ActiveExplorer().Selection[1];
@@ -208,7 +220,7 @@ namespace KeepAttachmentsOnReply
 
         public void Ribbon_Load(Office.IRibbonUI ribbonUI)
         {
-            this.ribbon = ribbonUI;
+            ribbon = ribbonUI;
         }
 
         #endregion

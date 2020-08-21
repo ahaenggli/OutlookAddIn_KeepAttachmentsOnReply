@@ -1,22 +1,22 @@
 ﻿using KeepAttachmentsOnReply.Properties;
 using Microsoft.Office.Interop.Outlook;
 using System;
+using System.Deployment.Application;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using System.Windows.Forms;
-using System.Threading;
-using Outlook = Microsoft.Office.Interop.Outlook;
-using System.Deployment.Application;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Windows.Forms;
+using Outlook = Microsoft.Office.Interop.Outlook;
 
 namespace KeepAttachmentsOnReply
 {
     public partial class ThisAddIn
     {
 
-        private static string tmpDir = Path.GetTempPath() + "OutlookAddIn_KeepAttachmentsOnReply" + Path.DirectorySeparatorChar.ToString();
+        private static readonly string tmpDir = Path.GetTempPath() + "OutlookAddIn_KeepAttachmentsOnReply" + Path.DirectorySeparatorChar.ToString();
 
         /// <summary>
         /// add menu items to ribbon bars
@@ -36,8 +36,10 @@ namespace KeepAttachmentsOnReply
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             //Background for better performance
-            Thread worker = new Thread(Init);
-            worker.IsBackground = true;
+            Thread worker = new Thread(Init)
+            {
+                IsBackground = true
+            };
             worker.Start();
         }
 
@@ -46,12 +48,14 @@ namespace KeepAttachmentsOnReply
         /// </summary>  
         private void Init()
         {
-            this.Application.Inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
-            this.Application.ActiveExplorer().InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(parseItem);
+            Application.Inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
+            Application.ActiveExplorer().InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(parseItem);
 
             //update vsto/clickonce directory in background
-            Thread worker = new Thread(Update);
-            worker.IsBackground = true;
+            Thread worker = new Thread(Update)
+            {
+                IsBackground = true
+            };
             worker.Start();
         }
 
@@ -67,8 +71,12 @@ namespace KeepAttachmentsOnReply
         private void Inspectors_NewInspector(Microsoft.Office.Interop.Outlook.Inspector Inspector)
         {
             if (Inspector != null)
+            {
                 if (Inspector is Microsoft.Office.Interop.Outlook.Inspector)
+                {
                     parseItem(Inspector.CurrentItem);
+                }
+            }
         }
 
         /// <summary>
@@ -99,7 +107,9 @@ namespace KeepAttachmentsOnReply
                             {
                                 object selectedItem = Application.ActiveExplorer().Selection[1];
                                 if (selectedItem is Outlook.MailItem)
+                                {
                                     addParentAttachments(mailItem, selectedItem as Outlook.MailItem);
+                                }
                             }
                         }
                     }
@@ -116,7 +126,7 @@ namespace KeepAttachmentsOnReply
             if (attFrom is Outlook.MailItem)
             {
                 // cast to MailItem. 
-                MailItem mailItem = attFrom as Outlook.MailItem;
+                MailItem mailItem = attFrom;
 
                 // any attachments?
                 if (mailItem.Attachments.Count > 0)
@@ -125,7 +135,7 @@ namespace KeepAttachmentsOnReply
                     foreach (Attachment attachment in mailItem.Attachments)
                     {
                         // flags to check whether the attachment is embedded (inline) or not
-                        var flags = attachment.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x37140003");
+                        dynamic flags = attachment.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x37140003");
 
                         // ignore embedded attachment...
                         if (flags != 4)
@@ -134,15 +144,18 @@ namespace KeepAttachmentsOnReply
                             if ((int)attachment.Type != 6)
                             {
                                 // does our temp dir exists? if not -> create
-                                if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
+                                if (!Directory.Exists(tmpDir))
+                                {
+                                    Directory.CreateDirectory(tmpDir);
+                                }
                                 // generate a temp path
-                                var tmp = tmpDir + attachment.FileName;
+                                string tmp = tmpDir + attachment.FileName;
                                 // save file to tmp
                                 attachment.SaveAsFile(tmp);
                                 // add tmp file as new attachment to the reply mail
                                 newMail.Attachments.Add(tmp, Outlook.OlAttachmentType.olByValue, 1, attachment.DisplayName);
                                 // save replay mail
-                                // newMail.Save();
+                                newMail.Save();
                                 // delete tmp file
                                 File.Delete(tmp);
                             }
@@ -157,6 +170,13 @@ namespace KeepAttachmentsOnReply
         /// </summary>
         private void Update()
         {
+
+#if DEBUG
+            Console.WriteLine("Mode=Debug");
+            return;
+#else
+
+#endif
             try
             {
                 if (Settings.Default.LastUpdateCheck == null)
@@ -175,9 +195,9 @@ namespace KeepAttachmentsOnReply
                     System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
                     HttpWebRequest wr = (HttpWebRequest)WebRequest.Create(Settings.Default.VersionUrl);
                     wr.UserAgent = "ahaenggli/OutlookAddIn_KeepAttachmentsOnReply";
-                    var x = wr.GetResponse(); ;
+                    WebResponse x = wr.GetResponse(); ;
 
-                    using (var reader = new System.IO.StreamReader(x.GetResponseStream()))
+                    using (StreamReader reader = new System.IO.StreamReader(x.GetResponseStream()))
                     {
                         string json = reader.ReadToEnd();
                         if (json.Contains("tag_name"))
@@ -204,9 +224,20 @@ namespace KeepAttachmentsOnReply
                             return;
                         }
 
-                        if (!Directory.Exists(AddInData)) Directory.CreateDirectory(AddInData);
-                        foreach (System.IO.FileInfo file in new DirectoryInfo(AddInData).GetFiles()) file.Delete();
-                        foreach (System.IO.DirectoryInfo subDirectory in new DirectoryInfo(AddInData).GetDirectories()) subDirectory.Delete(true);
+                        if (!Directory.Exists(AddInData))
+                        {
+                            Directory.CreateDirectory(AddInData);
+                        }
+
+                        foreach (System.IO.FileInfo file in new DirectoryInfo(AddInData).GetFiles())
+                        {
+                            file.Delete();
+                        }
+
+                        foreach (System.IO.DirectoryInfo subDirectory in new DirectoryInfo(AddInData).GetDirectories())
+                        {
+                            subDirectory.Delete(true);
+                        }
 
                         if (DownloadUrl.StartsWith("http"))
                         {
@@ -225,8 +256,10 @@ namespace KeepAttachmentsOnReply
             }
             catch (System.Exception Ex)
             {
-                if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("KeepAttachmentsOnReply_DownloadUrl", EnvironmentVariableTarget.Machine)))
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KeepAttachmentsOnReply_DownloadUrl", EnvironmentVariableTarget.Machine)))
+                {
                     MessageBox.Show(Ex.Message);
+                }
             }
         }
 
@@ -238,8 +271,8 @@ namespace KeepAttachmentsOnReply
         /// </summary>
         private void InternalStartup()
         {
-            this.Startup += new System.EventHandler(ThisAddIn_Startup);
-            this.Shutdown += new System.EventHandler(ThisAddIn_Shutdown);
+            Startup += new System.EventHandler(ThisAddIn_Startup);
+            Shutdown += new System.EventHandler(ThisAddIn_Shutdown);
         }
 
         #endregion
