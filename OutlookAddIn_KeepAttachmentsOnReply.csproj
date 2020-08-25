@@ -33,7 +33,7 @@
     <PublishUrl>\\asyn\web\PlugIn\outlook\</PublishUrl>
     <InstallUrl />
     <TargetCulture>de</TargetCulture>
-    <ApplicationVersion>1.0.5.1</ApplicationVersion>
+    <ApplicationVersion>1.0.6.1</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>0</UpdateInterval>
@@ -184,6 +184,7 @@
     can be found.
   -->
   <ItemGroup>
+    <Compile Include="OutlookExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

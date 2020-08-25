@@ -8,43 +8,26 @@ using System.Windows.Forms;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
-// TODO:  Führen Sie diese Schritte aus, um das Element auf dem Menüband (XML) zu aktivieren:
-
-// 1: Kopieren Sie folgenden Codeblock in die ThisAddin-, ThisWorkbook- oder ThisDocument-Klasse.
-
-//  protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
-//  {
-//      return new Ribbon();
-//  }
-
-// 2. Erstellen Sie Rückrufmethoden im Abschnitt "Menübandrückrufe" dieser Klasse, um Benutzeraktionen
-//    zu behandeln, z.B. das Klicken auf eine Schaltfläche. Hinweis: Wenn Sie dieses Menüband aus dem Menüband-Designer exportiert haben,
-//    verschieben Sie den Code aus den Ereignishandlern in die Rückrufmethoden, und ändern Sie den Code für die Verwendung mit dem
-//    Programmmodell für die Menübanderweiterung (RibbonX).
-
-// 3. Weisen Sie den Steuerelementtags in der Menüband-XML-Datei Attribute zu, um die entsprechenden Rückrufmethoden im Code anzugeben.  
-
-// Weitere Informationen erhalten Sie in der Menüband-XML-Dokumentation in der Hilfe zu Visual Studio-Tools für Office.
-
-
 namespace KeepAttachmentsOnReply
 {
     [ComVisible(true)]
     public class Ribbon : Office.IRibbonExtensibility
     {
+
         private Office.IRibbonUI ribbon;
 
-        private void getAttachmentsFromConversation(MailItem dest, MailItem search, int lvl)
+        private void getAttachmentsFromConversation(MailItem dest, MailItem search)
         {
             if (dest == null)
             {
                 return;
             }
 
-            if (countAttachements(dest) > 0)
+            if (dest.Attachments.CountNonEmbeddedAttachments() > 0)
             {
                 return;
             }
+
 
             System.Collections.Generic.Stack<MailItem> st = new System.Collections.Generic.Stack<MailItem>();
 
@@ -98,44 +81,25 @@ namespace KeepAttachmentsOnReply
             while (st.Count > 0)
             {
                 MailItem it = st.Pop();
-                if (countAttachements(it) > 0)
+
+                if (it.Attachments.CountNonEmbeddedAttachments() > 0)
                 {
-                    Debug.WriteLine(countAttachements(it));
-                    ThisAddIn.addParentAttachments(dest, it);
+                    //Debug.WriteLine(it.Attachments.CountNonEmbeddedAttachments());
+
+                    try
+                    {
+                        ThisAddIn.addParentAttachments(dest, it);
+                        dest.Save();
+                    }
+                    catch { }
+
                     st.Clear();
                 }
             }
 
         }
 
-        private int countAttachements(MailItem mailItem)
-        {
-            int cnt = 0;
-            if (mailItem != null)
-            {
-                // any attachments?
-                if (mailItem.Attachments.Count > 0)
-                {
-                    // iterate attachments
-                    foreach (Attachment attachment in mailItem.Attachments)
-                    {
-                        // flags to check whether the attachment is embedded (inline) or not
-                        dynamic flags = attachment.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x37140003");
 
-                        // ignore embedded attachment...
-                        if (flags != 4)
-                        {
-                            // rtf mail attachment comes here - and the embeded image is treated as attachment then Type value is 6 and ignore it
-                            if ((int)attachment.Type != 6)
-                            {
-                                cnt++;
-                            }
-                        }
-                    }
-                }
-            }
-            return cnt;
-        }
 
         private void EnumerateConversation(System.Collections.Generic.Stack<MailItem> st, object item, Outlook.Conversation conversation)
         {
@@ -169,7 +133,7 @@ namespace KeepAttachmentsOnReply
             }
         }
 
-        public void OnButton1(Office.IRibbonControl e)
+        public void OnFindMissingAttachments(Office.IRibbonControl e)
         {
             MailItem mailItem = null;
             Inspector m = e.Context as Inspector;
@@ -198,7 +162,7 @@ namespace KeepAttachmentsOnReply
                 }
 
                 //if (mailitem.Attachments.Count > 0) return;
-                getAttachmentsFromConversation(mailItem, mailItem, 0);
+                getAttachmentsFromConversation(mailItem, mailItem);
             }
 
         }

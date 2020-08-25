@@ -4,17 +4,17 @@
         <tabs>
             <tab idMso="TabMail">
                 <group id="group1" label="Anhänge">
-                    <button id="button1" onAction="OnButton1" label="Fehlende ermitteln" showImage="false" />
+                    <button id="button1" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="false" />
                 </group>
             </tab>
             <tab idMso="TabNewMailMessage">
                 <group id="group2" label="Anhänge">
-                    <button id="button2" onAction="OnButton1" label="Fehlende ermitteln" showImage="false" />
+                    <button id="button2" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="false" />
                 </group>
             </tab>
             <tab idMso="TabReadMessage">
                 <group id="group3" label="Anhänge">
-                    <button id="button3" onAction="OnButton1" label="Fehlende ermitteln" showImage="false" />
+                    <button id="button3" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="false" />
                 </group>
             </tab>
         </tabs>
@@ -22,7 +22,7 @@
        <tabSet idMso="TabComposeTools">
             <tab idMso="TabMessage">
                 <group id="group4" label="Anhänge">
-                    <button id="button4" onAction="OnButton1" label="Fehlende ermitteln" showImage="false" />
+                    <button id="button4" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="false" />
                 </group>
             </tab>
        </tabSet>

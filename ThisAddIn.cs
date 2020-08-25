@@ -145,36 +145,30 @@ namespace KeepAttachmentsOnReply
                 MailItem mailItem = attFrom;
 
                 // any attachments?
-                if (mailItem.Attachments.Count > 0)
+                if (mailItem.Attachments.CountNonEmbeddedAttachments() > 0)
                 {
                     // iterate attachments
                     foreach (Attachment attachment in mailItem.Attachments)
                     {
-                        // flags to check whether the attachment is embedded (inline) or not
-                        dynamic flags = attachment.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x37140003");
-
-                        // ignore embedded attachment...
-                        if (flags != 4)
+                        if (!attachment.IsEmbedded())
                         {
-                            // rtf mail attachment comes here - and the embeded image is treated as attachment then Type value is 6 and ignore it
-                            if ((int)attachment.Type != 6)
-                            {
-                                // does our temp dir exists? if not -> create
-                                if (!Directory.Exists(tmpDir))
-                                {
-                                    Directory.CreateDirectory(tmpDir);
-                                }
-                                // generate a temp path
-                                string tmp = tmpDir + attachment.FileName;
-                                // save file to tmp
-                                attachment.SaveAsFile(tmp);
-                                // add tmp file as new attachment to the reply mail
-                                newMail.Attachments.Add(tmp, Outlook.OlAttachmentType.olByValue, 1, attachment.DisplayName);
-                                // save replay mail
-                                //newMail.Save();
-                                // delete tmp file
-                                File.Delete(tmp);
-                            }
+                            // does our temp dir exists? if not -> create
+                            if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
+
+                            // generate a temp path
+                            string tmp = tmpDir + attachment.FileName;
+
+                            // save file to tmp
+                            attachment.SaveAsFile(tmp);
+
+                            // add tmp file as new attachment to the reply mail
+                            newMail.Attachments.Add(tmp, Outlook.OlAttachmentType.olByValue, 1, attachment.DisplayName);
+
+                            // save replay mail
+                            //newMail.Save();
+
+                            // delete tmp file
+                            File.Delete(tmp);
                         }
                     }
                 }
