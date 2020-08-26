@@ -9,17 +9,23 @@ namespace KeepAttachmentsOnReply
 {
     public static class OutlookExtensions
     {
+        // signed / crypted
+        private static string PR_SECURITY_FLAGS = @"http://schemas.microsoft.com/mapi/proptag/0x6E010003";
+        private static string AttachmentFlags = @"http://schemas.microsoft.com/mapi/proptag/0x37140003";
 
+        public static void Unsign(this MailItem mailItem)
+        {            
+            mailItem.PropertyAccessor.SetProperty(PR_SECURITY_FLAGS, 0);
+        }
         public static bool IsMailItemSignedOrEncrypted(this MailItem dest)
         {
-            string PR_SECURITY_FLAGS = @"http://schemas.microsoft.com/mapi/proptag/0x6E010003";
             dynamic str = dest.PropertyAccessor.GetProperty(PR_SECURITY_FLAGS);
             return (str % 32 > 0);
         }
         public static bool IsEmbedded(this Attachment attachment)
         {
             // flags to check whether the attachment is embedded (inline) or not
-            dynamic flags = attachment.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x37140003");
+            dynamic flags = attachment.PropertyAccessor.GetProperty(AttachmentFlags);
 
             // ignore embedded attachment...
             // https://docs.microsoft.com/en-us/openspecs/exchange_server_protocols/ms-oxcmsg/af8700bc-9d2a-47e4-b107-5ebf4467a418

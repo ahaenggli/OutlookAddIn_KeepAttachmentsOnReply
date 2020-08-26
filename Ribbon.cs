@@ -85,18 +85,34 @@ namespace KeepAttachmentsOnReply
 
                     try
                     {
+                        if (mailItem.IsMailItemSignedOrEncrypted())
+                            if (MessageBox.Show(null, "Es handelt sich um eine signierte Nachricht. Soll diese für die Anhänge ohne Zertifikat dupliziert werden?", "Nachricht duplizieren?", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                mailItem = mailItem.Copy();
+                                mailItem.Unsign();
+                            }
+                            else
+                            {
+                                st.Clear();
+                                break;
+                            }
+
                         ThisAddIn.addParentAttachments(mailItem, it);
                         mailItem.Save();
                     }
-                    catch {
-                        if(mailItem.IsMailItemSignedOrEncrypted())
-                            mailItem.Close(OlInspectorClose.olDiscard);
+                    catch (System.Exception ex)
+                    {
+                        //mailItem.Close(OlInspectorClose.olDiscard);
+                        MessageBox.Show(ex.Message);
                     }
 
                     st.Clear();
                 }
             }
-            st.Clear();            
+            st.Clear();
+
+            Marshal.ReleaseComObject(mailItem);
+            mailItem = null;
         }
 
 
