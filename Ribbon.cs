@@ -16,30 +16,27 @@ namespace KeepAttachmentsOnReply
 
         private Office.IRibbonUI ribbon;
 
-        private void getAttachmentsFromConversation(MailItem dest, MailItem search)
+        private void getAttachmentsFromConversation(MailItem mailItem)
         {
-            if (dest == null)
+            if (mailItem == null)
             {
                 return;
             }
 
-            if (dest.Attachments.CountNonEmbeddedAttachments() > 0)
+            if (mailItem.Attachments.CountNonEmbeddedAttachments() > 0)
             {
                 return;
             }
-
 
             System.Collections.Generic.Stack<MailItem> st = new System.Collections.Generic.Stack<MailItem>();
 
-            // Cast selectedItem to MailItem. 
-
             // Determine the store of the mail item. 
-            Outlook.Folder folder = search.Parent as Outlook.Folder;
+            Outlook.Folder folder = mailItem.Parent as Outlook.Folder;
             Outlook.Store store = folder.Store;
             if (store.IsConversationEnabled == true)
             {
                 // Obtain a Conversation object. 
-                Outlook.Conversation conv = search.GetConversation();
+                Outlook.Conversation conv = mailItem.GetConversation();
                 // Check for null Conversation. 
                 if (conv != null)
                 {
@@ -88,17 +85,19 @@ namespace KeepAttachmentsOnReply
 
                     try
                     {
-                        ThisAddIn.addParentAttachments(dest, it);
-                        dest.Save();
+                        ThisAddIn.addParentAttachments(mailItem, it);
+                        mailItem.Save();
                     }
-                    catch { }
+                    catch {
+                        if(mailItem.IsMailItemSignedOrEncrypted())
+                            mailItem.Close(OlInspectorClose.olDiscard);
+                    }
 
                     st.Clear();
                 }
             }
-
+            st.Clear();            
         }
-
 
 
         private void EnumerateConversation(System.Collections.Generic.Stack<MailItem> st, object item, Outlook.Conversation conversation)
@@ -162,7 +161,7 @@ namespace KeepAttachmentsOnReply
                 }
 
                 //if (mailitem.Attachments.Count > 0) return;
-                getAttachmentsFromConversation(mailItem, mailItem);
+                getAttachmentsFromConversation(mailItem);
             }
 
         }

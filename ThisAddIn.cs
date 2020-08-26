@@ -78,57 +78,52 @@ namespace KeepAttachmentsOnReply
         /// </summary>  
         private void parseItem(object item)
         {
+            if (item == null) return;
+
             // is it a mail? 
-            if (item is Outlook.MailItem)
+            if (!(item is Outlook.MailItem)) return;
+
+            // cast to MailItem
+            MailItem mailItem = item as MailItem;
+            if (mailItem == null) return;
+
+            // it is a new one
+            if (mailItem.EntryID == null && mailItem.Sent == false)
             {
-                // cast to MailItem
-                MailItem mailItem = item as MailItem;
-
-                // item not NULL
-                if (mailItem != null)
+                // is it a reply?
+                bool isReply = !string.IsNullOrEmpty(mailItem.To) || mailItem.Recipients.Count > 0;
+                // it is!
+                if (isReply)
                 {
-                    // it is a new one
-                    if (mailItem.EntryID == null && mailItem.Sent == false)
+                    // keep attachments from original mail
+                    // get selected item (reply is open, so this should be the original mail) 
+                    MailItem src = null;
+                    if (app.ActiveWindow() is Outlook.Explorer)
                     {
-                        // is it a reply?
-                        bool isReply = !string.IsNullOrEmpty(mailItem.To) || mailItem.Recipients.Count > 0;
-                        // it is!
-                        if (isReply)
+                        //Debug.WriteLine("Explorer");
+                        if (Application.ActiveExplorer().Selection.Count == 1)
                         {
-                            // keep attachments from original mail
-                            // get selected item (reply is open, so this should be the original mail) 
-                            MailItem src = null;
-                            if (app.ActiveWindow() is Outlook.Explorer)
+                            object selectedItem = Application.ActiveExplorer().Selection[1];
+                            if (selectedItem is Outlook.MailItem)
                             {
-                                //Debug.WriteLine("Explorer");
-
-                                if (Application.ActiveExplorer().Selection.Count == 1)
-                                {
-                                    object selectedItem = Application.ActiveExplorer().Selection[1];
-                                    if (selectedItem is Outlook.MailItem)
-                                    {
-                                        src = selectedItem as Outlook.MailItem;
-                                    }
-                                }
+                                src = selectedItem as Outlook.MailItem;
                             }
-                            else
-                            if (app.ActiveWindow() is Outlook.Inspector)
-                            {
-                                //Debug.WriteLine("Inspector");
-
-                                object selectedItem = Application.ActiveInspector().CurrentItem;
-                                if (selectedItem is Outlook.MailItem)
-                                {
-                                    src = selectedItem as Outlook.MailItem;
-                                }
-
-                            }
-
-                            if (src != null)
-                                addParentAttachments(mailItem, src);
-
                         }
                     }
+                    else
+                    if (app.ActiveWindow() is Outlook.Inspector)
+                    {
+                        //Debug.WriteLine("Inspector");
+                        object selectedItem = Application.ActiveInspector().CurrentItem;
+                        if (selectedItem is Outlook.MailItem)
+                        {
+                            src = selectedItem as Outlook.MailItem;
+                        }
+                    }
+
+                    if (src != null)
+                        addParentAttachments(mailItem, src);
+
                 }
             }
         }
