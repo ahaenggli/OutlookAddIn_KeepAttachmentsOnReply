@@ -2,13 +2,13 @@
 using Microsoft.Office.Interop.Outlook;
 using System;
 using System.Deployment.Application;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Timers;
 using System.Windows.Forms;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
@@ -18,9 +18,11 @@ namespace KeepAttachmentsOnReply
     {
 
         private static readonly string tmpDir = Path.GetTempPath() + "OutlookAddIn_KeepAttachmentsOnReply" + Path.DirectorySeparatorChar.ToString();
-        private Outlook.Inspectors inspectors;
-        private Outlook.Explorer explorers;
-        private Outlook.Application app;
+
+        private volatile Outlook.Inspectors inspectors;
+        private volatile Outlook.Explorer explorers;
+        private volatile Outlook.Application app;
+
         /// <summary>
         /// add menu items to ribbon bars
         /// </summary>
@@ -30,13 +32,22 @@ namespace KeepAttachmentsOnReply
             return new Ribbon();
         }
 
-
         /// <summary>
         /// register addIn in outlook
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
+        {
+            // init in the background
+            Thread worker = new Thread(Init)
+            {
+                IsBackground = true
+            };
+            worker.Start();
+        }
+
+        private void Init()
         {
             app = this.Application;
             inspectors = this.Application.Inspectors;
@@ -45,12 +56,17 @@ namespace KeepAttachmentsOnReply
             inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
             explorers.InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(parseItem);
 
-            //update vsto/clickonce directory in background
+            // update vsto/clickonce directory in background
             Thread worker = new Thread(Update)
             {
                 IsBackground = true
             };
             worker.Start();
+        }
+
+        private static void OnTimedEvent(Object source, ElapsedEventArgs e)
+        {
+            Console.WriteLine("The Elapsed event was raised at {0:HH:mm:ss.fff}", e.SignalTime);
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
@@ -184,6 +200,17 @@ namespace KeepAttachmentsOnReply
 #endif
             try
             {
+                if (Settings.Default.IsUpgradeRequired)
+                {
+                    Settings.Default.Upgrade();
+                    Settings.Default.Reload();
+                    Settings.Default.IsUpgradeRequired = false;
+                    Settings.Default.Save();
+                }
+
+                // AutoUpdate disabled
+                if (!Settings.Default.IsAutoUpdate) return;
+
                 if (Settings.Default.LastUpdateCheck == null)
                 {
                     Settings.Default.LastUpdateCheck = DateTime.Now;
@@ -209,7 +236,7 @@ namespace KeepAttachmentsOnReply
                         {
                             Regex pattern = new Regex("\"tag_name\":\"v\\d+(\\.\\d+){2,}\",");
                             Match m = pattern.Match(json);
-                            b = new Version(m.Value.Replace("\"", "").Replace("tag_name:v", "").Replace(",", ""));
+                            b = new Version(m.Value.Replace("\"", "").Replace("tag_name:v", "").Replace("tag_name:", "").Replace(",", ""));
                         }
                     }
 
@@ -220,9 +247,9 @@ namespace KeepAttachmentsOnReply
                         string AddInData = ProgramData + @"OutlookAddIn_KeepAttachmentsOnReply\";
                         string StartFile = AddInData + @"OutlookAddIn_KeepAttachmentsOnReply.vsto";
                         string localFile = AddInData + @"OutlookAddIn_KeepAttachmentsOnReply.zip";
-                        string DownloadUrl = Environment.GetEnvironmentVariable("KeepAttachmentsOnReply_DownloadUrl", EnvironmentVariableTarget.Machine) ?? Settings.Default.UpdateUrl;
+                        string DownloadUrl = Settings.Default.UpdateUrl;
 
-                        if (DownloadUrl.Equals("---"))
+                        if (!String.IsNullOrWhiteSpace(DownloadUrl))
                         {
                             Settings.Default.LastUpdateCheck = DateTime.Now;
                             Properties.Settings.Default.Save();
@@ -261,7 +288,7 @@ namespace KeepAttachmentsOnReply
             }
             catch (System.Exception Ex)
             {
-                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KeepAttachmentsOnReply_DownloadUrl", EnvironmentVariableTarget.Machine)))
+                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KeepAttachmentsOnReply_DEBUG", EnvironmentVariableTarget.Machine)))
                 {
                     MessageBox.Show(Ex.Message);
                 }

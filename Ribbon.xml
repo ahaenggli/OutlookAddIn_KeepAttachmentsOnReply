@@ -1,31 +1,45 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <customUI onLoad="Ribbon_Load" xmlns="http://schemas.microsoft.com/office/2006/01/customui">
-    <ribbon>
-        <tabs>
-            <tab idMso="TabMail">
-                <group id="group1" label="Anhänge">
-                    <button id="button1" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="false" />
-                </group>
-            </tab>
+  <ribbon>
+    <tabs>
+      <tab idMso="TabMail">
+        <group id="group1" label="Anhänge">
+          <button id="button1" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="true" imageMso="GroupAttach" size="large"  />
+          <buttonGroup id="btnGrp1">
+            <button id="btn_info1" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="ControlToolboxOutlook" />
+          </buttonGroup>
+        </group>
+      </tab>
+      <!-- in new mail -> hide it
             <tab idMso="TabNewMailMessage">
-                <group id="group2" label="Anhänge">
-                    <button id="button2" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="false" />
-                </group>
+              <group id="group2" label="Anhänge">
+                <button id="button2" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="true" imageMso="GroupAttach" size="large"  />
+                <buttonGroup id="btnGrp2">
+                  <button id="btn_info2" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="ControlToolboxOutlook" />
+                </buttonGroup>
+              </group>
             </tab>
-            <tab idMso="TabReadMessage">
-                <group id="group3" label="Anhänge">
-                    <button id="button3" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="false" />
-                </group>
-            </tab>
-        </tabs>
-     <contextualTabs>
-       <tabSet idMso="TabComposeTools">
-            <tab idMso="TabMessage">
-                <group id="group4" label="Anhänge">
-                    <button id="button4" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="false" />
-                </group>
-            </tab>
-       </tabSet>
-   </contextualTabs>
-    </ribbon>
+            -->
+      <tab idMso="TabReadMessage">
+        <group id="group3" label="Anhänge">
+          <button id="button3" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="true" imageMso="GroupAttach" size="large"  />
+          <buttonGroup id="btnGrp3">
+            <button id="btn_info3" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="ControlToolboxOutlook" />
+          </buttonGroup>
+        </group>
+      </tab>
+    </tabs>
+    <contextualTabs>
+      <tabSet idMso="TabComposeTools">
+        <tab idMso="TabMessage">
+          <group id="group4" label="Anhänge">
+            <button id="button4" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="true" imageMso="GroupAttach" size="large"  />
+            <buttonGroup id="btnGrp4">
+              <button id="btn_info4" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="ControlToolboxOutlook" />
+            </buttonGroup>
+          </group>
+        </tab>
+      </tabSet>
+    </contextualTabs>
+  </ribbon>
 </customUI>

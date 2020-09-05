@@ -53,5 +53,29 @@ namespace KeepAttachmentsOnReply.Properties {
                 return ((string)(this["VersionUrl"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool IsUpgradeRequired {
+            get {
+                return ((bool)(this["IsUpgradeRequired"]));
+            }
+            set {
+                this["IsUpgradeRequired"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool IsAutoUpdate {
+            get {
+                return ((bool)(this["IsAutoUpdate"]));
+            }
+            set {
+                this["IsAutoUpdate"] = value;
+            }
+        }
     }
 }

@@ -1,9 +1,4 @@
 ﻿using Microsoft.Office.Interop.Outlook;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KeepAttachmentsOnReply
 {
@@ -14,7 +9,7 @@ namespace KeepAttachmentsOnReply
         private static string AttachmentFlags = @"http://schemas.microsoft.com/mapi/proptag/0x37140003";
 
         public static void Unsign(this MailItem mailItem)
-        {            
+        {
             mailItem.PropertyAccessor.SetProperty(PR_SECURITY_FLAGS, 0);
         }
         public static bool IsMailItemSignedOrEncrypted(this MailItem dest)

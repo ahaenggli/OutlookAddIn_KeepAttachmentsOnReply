@@ -15,22 +15,21 @@ namespace Setup
 
         private static void Main(string[] args)
         {
-            string DownloadUrl = Environment.GetEnvironmentVariable("KeepAttachmentsOnReply_DownloadUrl", EnvironmentVariableTarget.Machine) ?? Settings.Default.UpdateUrl;
+            string DownloadUrl = Settings.Default.UpdateUrl;
 
-            bool runVSTO = true;
-
-            if (args.Length > 0)
-            {
-                DownloadUrl = args[0];
-
-                foreach (string a in args)
-                {
-                    if (a.ToLower().Equals("/silent"))
-                    {
-                        runVSTO = false;
-                    }
-                }
-            }
+            //bool runVSTO = true;
+            //if (args.Length > 0)
+            //{
+            //    DownloadUrl = args[0];
+            //
+            //    foreach (string a in args)
+            //    {
+            //        if (a.ToLower().Equals("/silent"))
+            //        {
+            //            runVSTO = false;
+            //        }
+            //    }
+            //}
 
             if (!Directory.Exists(AddInData))
             {
@@ -56,11 +55,8 @@ namespace Setup
             }
 
             ZipFile.ExtractToDirectory(DownloadUrl, AddInData);
-            //System.Diagnostics.Process.Start("VSTOInstaller.exe /silent /uninstall \""+ StartFile + "\"");
-            if (runVSTO)
-            {
-                System.Diagnostics.Process.Start(StartFile);
-            }
+            System.Diagnostics.Process.Start(StartFile);
+
         }
     }
 }

@@ -11,5 +11,11 @@
     <Setting Name="VersionUrl" Type="System.String" Scope="Application">
       <Value Profile="(Default)">https://api.github.com/repos/ahaenggli/OutlookAddIn_KeepAttachmentsOnReply/releases/latest</Value>
     </Setting>
+    <Setting Name="IsUpgradeRequired" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="IsAutoUpdate" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

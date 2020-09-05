@@ -1,7 +1,9 @@
 ﻿using Microsoft.Office.Interop.Outlook;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -16,7 +18,7 @@ namespace KeepAttachmentsOnReply
 
         private Office.IRibbonUI ribbon;
 
-        private void getAttachmentsFromConversation(MailItem mailItem)
+        private void getAttachmentsFromConversation(MailItem mailItem, string src)
         {
             if (mailItem == null)
             {
@@ -55,8 +57,7 @@ namespace KeepAttachmentsOnReply
                         // can appear in the conversation. 
                         if (item is Outlook.MailItem)
                         {
-                            Outlook.MailItem mail = item
-                            as Outlook.MailItem;
+                            Outlook.MailItem mail = item as Outlook.MailItem;
                             Outlook.Folder inFolder = mail.Parent as Outlook.Folder;
                             string msg = mail.Subject + " in folder [" + inFolder.Name + "] EntryId [" + (mail.EntryID.ToString() ?? "NONE") + "]";
                             Debug.WriteLine(msg);
@@ -88,8 +89,12 @@ namespace KeepAttachmentsOnReply
                         if (mailItem.IsMailItemSignedOrEncrypted())
                             if (MessageBox.Show(null, "Es handelt sich um eine signierte Nachricht. Soll diese für die Anhänge ohne Zertifikat dupliziert werden?", "Nachricht duplizieren?", MessageBoxButtons.YesNo) == DialogResult.Yes)
                             {
+                                mailItem.Close(OlInspectorClose.olDiscard);
                                 mailItem = mailItem.Copy();
                                 mailItem.Unsign();
+                                mailItem.Save();
+                                mailItem.Close(OlInspectorClose.olDiscard);
+                                mailItem.Save();
                             }
                             else
                             {
@@ -148,38 +153,63 @@ namespace KeepAttachmentsOnReply
             }
         }
 
+        public void OnInfo(Office.IRibbonControl e)
+        {
+            Form frm = new AboutForm();
+            frm.ShowDialog();
+            frm.Close();
+            frm.Dispose();
+        }
         public void OnFindMissingAttachments(Office.IRibbonControl e)
         {
-            MailItem mailItem = null;
+            List<MailItem> mailItems = new List<MailItem>();
             Inspector m = e.Context as Inspector;
-
+            string src = "";
             // single email opend 
             if (m != null)
             {
-                mailItem = m.CurrentItem as MailItem;
+                mailItems.Add(m.CurrentItem as MailItem);
+                src = "mail";
             }
             else
             {
-                object selectedItem = Globals.ThisAddIn.Application.ActiveExplorer().Selection[1];
-                if (selectedItem is Outlook.MailItem)
+                foreach (object selectedItem in Globals.ThisAddIn.Application.ActiveExplorer().Selection)
                 {
-                    mailItem = selectedItem as Outlook.MailItem;
+                    if (selectedItem is Outlook.MailItem)
+                    {
+                        mailItems.Add(selectedItem as Outlook.MailItem);
+                        src = "explorer";
+                    }
                 }
             }
 
 
-            if (mailItem != null)
+            if (mailItems.Count > 0)
             {
-                if (mailItem.EntryID == null)
+                foreach (MailItem mailItem in mailItems)
                 {
-                    MessageBox.Show("noch nicht implementiert...");
-                    return;
-                }
+                    if (mailItem.EntryID == null)
+                    {
+                        MessageBox.Show("noch nicht implementiert...");
+                        break;
+                    }
 
-                //if (mailitem.Attachments.Count > 0) return;
-                getAttachmentsFromConversation(mailItem);
+                    //if (mailitem.Attachments.Count > 0) return;
+                    getAttachmentsFromConversation(mailItem, src);
+
+                    if (mailItems.Count > 1 && mailItems.First().Equals(mailItem))
+                    {
+                        if (MessageBox.Show(null, "Es wurden mehrere Nachrichten ausgewählt. " + Environment.NewLine + "Sollen die Anhänge für alle " +
+                                                    mailItems.Count.ToString() +
+                                                    " Nachrichten gesucht werden?", "Alle suchen?", MessageBoxButtons.YesNo) == DialogResult.No)
+                        {
+                            break;
+                        }
+                    }
+                }
             }
 
+            mailItems.Clear();
         }
         public Ribbon()
         {
