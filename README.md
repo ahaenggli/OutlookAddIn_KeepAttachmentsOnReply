@@ -5,11 +5,11 @@
 ## Features
 - Bei "antworten" und "allen antworten" werden die Mailanhänge automatisch eingefügt
 - Button um bei bestehenden Mails die letzten Anhänge wiedereinzufügen  
-    ![FehlendeErmitteln](img/screenshot_button.png)  
+    ![FehlendeErmitteln](.github/img/screenshot_button.png)  
     - Bei signierten Mails wird das Mail dafür ohne Zertifikat dupliziert
     - Es können auch mehrere Mails markiert werden 
 - Auto-Update Funktion (in Einstellungen deaktivierbar)  
-    ![Einstellungen](img/screenshot_settings.png)
+    ![Einstellungen](.github/img/screenshot_settings.png)
 
 ## Changelog
 ... [findet sich hier](CHANGELOG.md) ...
