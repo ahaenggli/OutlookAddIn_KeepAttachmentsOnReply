@@ -87,4 +87,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>del "$(ProjectDir)$(OutDir)\$(TargetName).zip"
+powershell "Compress-Archive -Path $(ProjectDir)$(OutDir)\*.exe -DestinationPath $(ProjectDir)$(OutDir)\$(TargetName).zip"
+copy "$(ProjectDir)$(OutDir)\$(TargetName).zip" \\asyn\web\PlugIn\outlook\</PostBuildEvent>
+  </PropertyGroup>
 </Project>

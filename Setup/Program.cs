@@ -10,7 +10,7 @@ namespace Setup
     {
         private static readonly string ProgramData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\haenggli.NET\";
         private static readonly string AddInData = ProgramData + @"OutlookAddIn_KeepAttachmentsOnReply\";
-        private static readonly string StartFile = AddInData + @"OutlookAddIn_KeepAttachmentsOnReply.vsto";
+        private static readonly string StartFile = AddInData + @"setup.exe";
         private static readonly string localFile = AddInData + @"OutlookAddIn_KeepAttachmentsOnReply.zip";
 
         private static void Main(string[] args)

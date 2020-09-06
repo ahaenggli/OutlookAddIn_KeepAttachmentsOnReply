@@ -18,11 +18,7 @@ namespace KeepAttachmentsOnReply
     {
 
         private static readonly string tmpDir = Path.GetTempPath() + "OutlookAddIn_KeepAttachmentsOnReply" + Path.DirectorySeparatorChar.ToString();
-
-        private volatile Outlook.Inspectors inspectors;
-        private volatile Outlook.Explorer explorers;
-        private volatile Outlook.Application app;
-
+        
         /// <summary>
         /// add menu items to ribbon bars
         /// </summary>
@@ -49,12 +45,8 @@ namespace KeepAttachmentsOnReply
 
         private void Init()
         {
-            app = this.Application;
-            inspectors = this.Application.Inspectors;
-            explorers = this.Application.ActiveExplorer();
-
-            inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
-            explorers.InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(parseItem);
+            this.Application.Inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
+            this.Application.ActiveExplorer().InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(parseItem);
 
             // update vsto/clickonce directory in background
             Thread worker = new Thread(Update)
@@ -114,7 +106,7 @@ namespace KeepAttachmentsOnReply
                     // keep attachments from original mail
                     // get selected item (reply is open, so this should be the original mail) 
                     MailItem src = null;
-                    if (app.ActiveWindow() is Outlook.Explorer)
+                    if (this.Application.ActiveWindow() is Outlook.Explorer)
                     {
                         //Debug.WriteLine("Explorer");
                         if (Application.ActiveExplorer().Selection.Count == 1)
@@ -127,7 +119,7 @@ namespace KeepAttachmentsOnReply
                         }
                     }
                     else
-                    if (app.ActiveWindow() is Outlook.Inspector)
+                    if (this.Application.ActiveWindow() is Outlook.Inspector)
                     {
                         //Debug.WriteLine("Inspector");
                         object selectedItem = Application.ActiveInspector().CurrentItem;
