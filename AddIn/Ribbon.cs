@@ -1,7 +1,6 @@
 ﻿using Microsoft.Office.Interop.Outlook;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -16,9 +15,9 @@ namespace KeepAttachmentsOnReply
     public class Ribbon : Office.IRibbonExtensibility
     {
 
-        private Office.IRibbonUI ribbon;
+        private static readonly log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private void getAttachmentsFromConversation(MailItem mailItem, string src)
+        private void GetAttachmentsFromConversation(MailItem mailItem)
         {
             if (mailItem == null)
             {
@@ -45,9 +44,9 @@ namespace KeepAttachmentsOnReply
                     // Obtain Table that contains rows 
                     // for each item in the conversation. 
                     Outlook.Table table = conv.GetTable();
-                    Debug.WriteLine("Conversation Items Count: " + table.GetRowCount().ToString());
+                    _logger.Debug("Conversation Items Count: " + table.GetRowCount().ToString());
+                    _logger.Debug("Conversation Items from Root:");
 
-                    Debug.WriteLine("Conversation Items from Root:");
                     // Obtain root items and enumerate the conversation. 
                     Outlook.SimpleItems simpleItems = conv.GetRootItems();
                     foreach (object item in simpleItems)
@@ -60,9 +59,9 @@ namespace KeepAttachmentsOnReply
                             Outlook.MailItem mail = item as Outlook.MailItem;
                             Outlook.Folder inFolder = mail.Parent as Outlook.Folder;
                             string msg = mail.Subject + " in folder [" + inFolder.Name + "] EntryId [" + (mail.EntryID.ToString() ?? "NONE") + "]";
-                            Debug.WriteLine(msg);
-                            Debug.WriteLine(mail.Sender);
-                            Debug.WriteLine(mail.ReceivedByEntryID);
+                            _logger.Debug(msg);
+                            _logger.Debug(mail.Sender);
+                            _logger.Debug(mail.ReceivedByEntryID);
 
                             if (mail.EntryID != null && (mail.Sender != null || mail.ReceivedByEntryID != null))
                             {
@@ -82,7 +81,7 @@ namespace KeepAttachmentsOnReply
 
                 if (it.Attachments.CountNonEmbeddedAttachments() > 0)
                 {
-                    //Debug.WriteLine(it.Attachments.CountNonEmbeddedAttachments());
+                    //_logger.Debug(it.Attachments.CountNonEmbeddedAttachments());
 
                     try
                     {
@@ -102,7 +101,7 @@ namespace KeepAttachmentsOnReply
                                 break;
                             }
 
-                        ThisAddIn.addParentAttachments(mailItem, it);
+                        mailItem.CopyAttachmentsFrom(it);
                         mailItem.Save();
                     }
                     catch (System.Exception ex)
@@ -117,9 +116,7 @@ namespace KeepAttachmentsOnReply
             st.Clear();
 
             Marshal.ReleaseComObject(mailItem);
-            mailItem = null;
         }
-
 
         private void EnumerateConversation(System.Collections.Generic.Stack<MailItem> st, object item, Outlook.Conversation conversation)
         {
@@ -138,9 +135,9 @@ namespace KeepAttachmentsOnReply
                         Outlook.Folder inFolder = mailItem.Parent as Outlook.Folder;
 
                         string msg = mailItem.Subject + " in folder [" + inFolder.Name + "] EntryId [" + (mailItem.EntryID.ToString() ?? "NONE") + "]";
-                        Debug.WriteLine(msg);
-                        Debug.WriteLine(mailItem.Sender);
-                        Debug.WriteLine(mailItem.ReceivedByEntryID);
+                        _logger.Debug(msg);
+                        _logger.Debug(mailItem.Sender);
+                        _logger.Debug(mailItem.ReceivedByEntryID);
 
                         if (mailItem.EntryID != null && (mailItem.Sender != null || mailItem.ReceivedByEntryID != null))
                         {
@@ -153,6 +150,27 @@ namespace KeepAttachmentsOnReply
             }
         }
 
+        public Ribbon()
+        {
+        }
+
+        #region IRibbonExtensibility-Member
+
+        public string GetCustomUI(string ribbonID)
+        {
+            return GetResourceText("KeepAttachmentsOnReply.Ribbon.xml");
+        }
+
+        #endregion
+
+        #region Menübandrückrufe
+        //Erstellen Sie hier Rückrufmethoden. 
+        //Weitere Informationen zum Hinzufügen von Rückrufmethoden finden Sie unter https://go.microsoft.com/fwlink/?LinkID=271226.
+
+        public void Ribbon_Load(Office.IRibbonUI ribbonUI)
+        {
+        }
+
         public void OnInfo(Office.IRibbonControl e)
         {
             Form frm = new AboutForm();
@@ -160,16 +178,15 @@ namespace KeepAttachmentsOnReply
             frm.Close();
             frm.Dispose();
         }
+
         public void OnFindMissingAttachments(Office.IRibbonControl e)
         {
             List<MailItem> mailItems = new List<MailItem>();
-            Inspector m = e.Context as Inspector;
-            string src = "";
+
             // single email opend 
-            if (m != null)
+            if (e.Context is Inspector m)
             {
                 mailItems.Add(m.CurrentItem as MailItem);
-                src = "mail";
             }
             else
             {
@@ -178,7 +195,6 @@ namespace KeepAttachmentsOnReply
                     if (selectedItem is Outlook.MailItem)
                     {
                         mailItems.Add(selectedItem as Outlook.MailItem);
-                        src = "explorer";
                     }
                 }
             }
@@ -194,9 +210,10 @@ namespace KeepAttachmentsOnReply
                         break;
                     }
 
-                    //if (mailitem.Attachments.Count > 0) return;
-                    getAttachmentsFromConversation(mailItem, src);
+                    // if (mailitem.Attachments.Count > 0) return;
+                    GetAttachmentsFromConversation(mailItem);
 
+                    // Abbruch-Bedingung
                     if (mailItems.Count > 1 && mailItems.First().Equals(mailItem))
                     {
                         if (MessageBox.Show(null, "Es wurden mehrere Nachrichten ausgewählt. " + Environment.NewLine + "Sollen die Anhänge für alle " +
@@ -210,26 +227,6 @@ namespace KeepAttachmentsOnReply
             }
 
             mailItems.Clear();
-        }
-        public Ribbon()
-        {
-        }
-
-        #region IRibbonExtensibility-Member
-
-        public string GetCustomUI(string ribbonID)
-        {
-            return GetResourceText("KeepAttachmentsOnReply.Ribbon.xml");
-        }
-
-        #endregion
-
-        #region Menübandrückrufe
-        //Erstellen Sie hier Rückrufmethoden. Weitere Informationen zum Hinzufügen von Rückrufmethoden finden Sie unter https://go.microsoft.com/fwlink/?LinkID=271226.
-
-        public void Ribbon_Load(Office.IRibbonUI ribbonUI)
-        {
-            ribbon = ribbonUI;
         }
 
         #endregion

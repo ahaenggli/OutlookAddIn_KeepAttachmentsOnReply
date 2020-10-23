@@ -7,9 +7,6 @@ using System.IO.Compression;
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Timers;
-using System.Windows.Forms;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
 namespace KeepAttachmentsOnReply
@@ -17,179 +14,13 @@ namespace KeepAttachmentsOnReply
     public partial class ThisAddIn
     {
 
-        private static readonly string tmpDir = Path.GetTempPath() + "OutlookAddIn_KeepAttachmentsOnReply" + Path.DirectorySeparatorChar.ToString();
-        
-        /// <summary>
-        /// add menu items to ribbon bars
-        /// </summary>
-        /// <returns>ribbonbar</returns>
-        protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
+        private static readonly log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly System.Threading.Timer _timerUpdateCheck = new System.Threading.Timer(OnTimerUpdateCheck, null, 60000, 0);
+
+        private static void OnTimerUpdateCheck(object state)
         {
-            return new Ribbon();
-        }
+            _logger.Debug("OnTimerUpdateCheck");
 
-        /// <summary>
-        /// register addIn in outlook
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ThisAddIn_Startup(object sender, System.EventArgs e)
-        {
-            // init in the background
-            Thread worker = new Thread(Init)
-            {
-                IsBackground = true
-            };
-            worker.Start();
-        }
-
-        private void Init()
-        {
-            this.Application.Inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
-            this.Application.ActiveExplorer().InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(parseItem);
-
-            // update vsto/clickonce directory in background
-            Thread worker = new Thread(Update)
-            {
-                IsBackground = true
-            };
-            worker.Start();
-        }
-
-        private static void OnTimedEvent(Object source, ElapsedEventArgs e)
-        {
-            Console.WriteLine("The Elapsed event was raised at {0:HH:mm:ss.fff}", e.SignalTime);
-        }
-
-        private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
-        {
-            // Hinweis: Outlook löst dieses Ereignis nicht mehr aus. Wenn Code vorhanden ist, der 
-            //    muss ausgeführt werden, wenn Outlook heruntergefahren wird. Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?LinkId=506785.
-        }
-
-        /// <summary>
-        /// handle for new Inspector
-        /// </summary>  
-        private void Inspectors_NewInspector(Microsoft.Office.Interop.Outlook.Inspector Inspector)
-        {
-            if (Inspector != null)
-            {
-                if (Inspector is Microsoft.Office.Interop.Outlook.Inspector)
-                {
-                    parseItem(Inspector.CurrentItem);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Parse an opend item if it is a mail
-        /// </summary>  
-        private void parseItem(object item)
-        {
-            if (item == null) return;
-
-            // is it a mail? 
-            if (!(item is Outlook.MailItem)) return;
-
-            // cast to MailItem
-            MailItem mailItem = item as MailItem;
-            if (mailItem == null) return;
-
-            // it is a new one
-            if (mailItem.EntryID == null && mailItem.Sent == false)
-            {
-                // is it a reply?
-                bool isReply = !string.IsNullOrEmpty(mailItem.To) || mailItem.Recipients.Count > 0;
-                // it is!
-                if (isReply)
-                {
-                    // keep attachments from original mail
-                    // get selected item (reply is open, so this should be the original mail) 
-                    MailItem src = null;
-                    if (this.Application.ActiveWindow() is Outlook.Explorer)
-                    {
-                        //Debug.WriteLine("Explorer");
-                        if (Application.ActiveExplorer().Selection.Count == 1)
-                        {
-                            object selectedItem = Application.ActiveExplorer().Selection[1];
-                            if (selectedItem is Outlook.MailItem)
-                            {
-                                src = selectedItem as Outlook.MailItem;
-                            }
-                        }
-                    }
-                    else
-                    if (this.Application.ActiveWindow() is Outlook.Inspector)
-                    {
-                        //Debug.WriteLine("Inspector");
-                        object selectedItem = Application.ActiveInspector().CurrentItem;
-                        if (selectedItem is Outlook.MailItem)
-                        {
-                            src = selectedItem as Outlook.MailItem;
-                        }
-                    }
-
-                    if (src != null)
-                        addParentAttachments(mailItem, src);
-
-                }
-            }
-        }
-
-        /// <summary>
-        /// Copy attachments from original mail to the reply
-        /// </summary>  
-        public static void addParentAttachments(MailItem newMail, MailItem attFrom)
-        {
-            // is it a mail? 
-            if (attFrom is Outlook.MailItem)
-            {
-                // cast to MailItem. 
-                MailItem mailItem = attFrom;
-
-                // any attachments?
-                if (mailItem.Attachments.CountNonEmbeddedAttachments() > 0)
-                {
-                    // iterate attachments
-                    foreach (Attachment attachment in mailItem.Attachments)
-                    {
-                        if (!attachment.IsEmbedded())
-                        {
-                            // does our temp dir exists? if not -> create
-                            if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
-
-                            // generate a temp path
-                            string tmp = tmpDir + attachment.FileName;
-
-                            // save file to tmp
-                            attachment.SaveAsFile(tmp);
-
-                            // add tmp file as new attachment to the reply mail
-                            newMail.Attachments.Add(tmp, Outlook.OlAttachmentType.olByValue, 1, attachment.DisplayName);
-
-                            // save replay mail
-                            //newMail.Save();
-
-                            // delete tmp file
-                            File.Delete(tmp);
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Check for updates and download them
-        /// </summary>
-        private void Update()
-        {
-
-#if DEBUG
-            Console.WriteLine("Mode=Debug");
-            return;
-#else
-
-#endif
             try
             {
                 if (Settings.Default.IsUpgradeRequired)
@@ -212,7 +43,6 @@ namespace KeepAttachmentsOnReply
                 Version a = (ApplicationDeployment.IsNetworkDeployed) ? ApplicationDeployment.CurrentDeployment.CurrentVersion : Assembly.GetExecutingAssembly().GetName().Version;
                 Version b = a;
 
-
                 // once a day should be enougth....
                 if (Settings.Default.LastUpdateCheck.AddHours(1) <= DateTime.Now)
                 {
@@ -234,17 +64,16 @@ namespace KeepAttachmentsOnReply
 
                     if (b > a)
                     {
-
                         string ProgramData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\haenggli.NET\";
                         string AddInData = ProgramData + @"OutlookAddIn_KeepAttachmentsOnReply\";
                         string StartFile = AddInData + @"OutlookAddIn_KeepAttachmentsOnReply.vsto";
                         string localFile = AddInData + @"OutlookAddIn_KeepAttachmentsOnReply.zip";
                         string DownloadUrl = Settings.Default.UpdateUrl;
 
-                        if (!String.IsNullOrWhiteSpace(DownloadUrl))
+                        if (String.IsNullOrWhiteSpace(DownloadUrl))
                         {
                             Settings.Default.LastUpdateCheck = DateTime.Now;
-                            Properties.Settings.Default.Save();
+                            Settings.Default.Save();
                             return;
                         }
 
@@ -265,7 +94,6 @@ namespace KeepAttachmentsOnReply
 
                         if (DownloadUrl.StartsWith("http"))
                         {
-
                             WebClient webClient = new WebClient();
                             webClient.DownloadFile(DownloadUrl, localFile);
                             webClient.Dispose();
@@ -280,15 +108,57 @@ namespace KeepAttachmentsOnReply
             }
             catch (System.Exception Ex)
             {
-                if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KeepAttachmentsOnReply_DEBUG", EnvironmentVariableTarget.Machine)))
+                _logger.Error(Ex);
+            }
+
+        }
+
+        /// <summary>
+        /// add menu items to ribbon bars
+        /// </summary>
+        /// <returns>ribbonbar</returns>
+        protected override Microsoft.Office.Core.IRibbonExtensibility CreateRibbonExtensibilityObject()
+        {
+            _logger.Debug("CreateRibbonExtensibilityObject");
+            return new Ribbon();
+        }
+
+        /// <summary>
+        /// register addIn in outlook
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ThisAddIn_Startup(object sender, System.EventArgs e)
+        {
+            _logger.Debug("Startup");
+            this.Application.Inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
+            this.Application.ActiveExplorer().InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(OutlookExtensions.ParseItemForAttachments);
+            OnTimerUpdateCheck(null);
+        }
+
+        private void ThisAddIn_Shutdown(object sender, System.EventArgs e)
+        {
+            // Hinweis: Outlook löst dieses Ereignis nicht mehr aus. Wenn Code vorhanden ist, der 
+            // muss ausgeführt werden, wenn Outlook heruntergefahren wird. 
+            // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?LinkId=506785.
+            _logger.Debug("Shutdown");
+        }
+
+        /// <summary>
+        /// handle for new Inspector
+        /// </summary>  
+        private void Inspectors_NewInspector(Microsoft.Office.Interop.Outlook.Inspector Inspector)
+        {
+            if (Inspector != null)
+            {
+                if (Inspector is Microsoft.Office.Interop.Outlook.Inspector)
                 {
-                    MessageBox.Show(Ex.Message);
+                    OutlookExtensions.ParseItemForAttachments(Inspector.CurrentItem);
                 }
             }
         }
 
         #region Von VSTO generierter Code
-
         /// <summary>
         /// Erforderliche Methode für die Designerunterstützung.
         /// Der Inhalt der Methode darf nicht mit dem Code-Editor geändert werden.

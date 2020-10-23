@@ -6,7 +6,7 @@
         <group id="group1" label="Anhänge">
           <button id="button1" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="true" imageMso="GroupAttach" size="large"  />
           <buttonGroup id="btnGrp1">
-            <button id="btn_info1" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="ControlToolboxOutlook" />
+            <button id="btn_info1" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="Info" />
           </buttonGroup>
         </group>
       </tab>
@@ -24,7 +24,7 @@
         <group id="group3" label="Anhänge">
           <button id="button3" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="true" imageMso="GroupAttach" size="large"  />
           <buttonGroup id="btnGrp3">
-            <button id="btn_info3" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="ControlToolboxOutlook" />
+            <button id="btn_info3" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="Info" />
           </buttonGroup>
         </group>
       </tab>
@@ -35,7 +35,7 @@
           <group id="group4" label="Anhänge">
             <button id="button4" onAction="OnFindMissingAttachments" label="Fehlende ermitteln" showImage="true" imageMso="GroupAttach" size="large"  />
             <buttonGroup id="btnGrp4">
-              <button id="btn_info4" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="ControlToolboxOutlook" />
+              <button id="btn_info4" onAction="OnInfo" label="Info" showLabel="false" showImage="true" imageMso="Info" />
             </buttonGroup>
           </group>
         </tab>

@@ -139,7 +139,7 @@ namespace KeepAttachmentsOnReply
 
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            ProcessStartInfo website = new ProcessStartInfo(@"https://github.com/ahaenggli/OutlookAddIn_KeepAttachmentsOnReply");
+            ProcessStartInfo website = new ProcessStartInfo(@"https://github.com/ahaenggli/OutlookAddIn_KeepAttachmentsOnReply#readme");
             Process.Start(website);
         }
     }
