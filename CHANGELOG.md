@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - bug fixes, so many bug fixes
+
+## [1.0.8.1] - 2020-10-23
+- fix disabled auto update
+- add log4net
+- optimize performance with timer instead of background threads
+
 ## [1.0.7.0] - 2020-09-05
 - add README and CHANGELOG
 - add attachments for multiple selected emails
