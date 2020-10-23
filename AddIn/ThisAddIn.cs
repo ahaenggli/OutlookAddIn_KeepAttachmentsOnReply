@@ -1,5 +1,6 @@
 ﻿using KeepAttachmentsOnReply.Properties;
 using Microsoft.Office.Interop.Outlook;
+using Microsoft.Win32;
 using System;
 using System.Deployment.Application;
 using System.IO;
@@ -84,12 +85,27 @@ namespace KeepAttachmentsOnReply
 
                         foreach (System.IO.FileInfo file in new DirectoryInfo(AddInData).GetFiles())
                         {
-                            file.Delete();
+                            try
+                            {
+                                file.Delete();
+                            }
+                            catch (System.Exception Ex)
+                            {
+                                _logger.Error(Ex);
+                            }
                         }
-
+                        
                         foreach (System.IO.DirectoryInfo subDirectory in new DirectoryInfo(AddInData).GetDirectories())
                         {
-                            subDirectory.Delete(true);
+                            try
+                            {
+                                if (subDirectory.Name.ToLower().Equals("log")) continue;
+                                subDirectory.Delete(true);
+                            }
+                            catch (System.Exception Ex)
+                            {
+                                _logger.Error(Ex);
+                            }
                         }
 
                         if (DownloadUrl.StartsWith("http"))
@@ -101,6 +117,8 @@ namespace KeepAttachmentsOnReply
                         }
 
                         ZipFile.ExtractToDirectory(DownloadUrl, AddInData);
+
+            
                     }
                     Settings.Default.LastUpdateCheck = DateTime.Now;
                     Properties.Settings.Default.Save();
@@ -110,7 +128,6 @@ namespace KeepAttachmentsOnReply
             {
                 _logger.Error(Ex);
             }
-
         }
 
         /// <summary>
@@ -131,9 +148,8 @@ namespace KeepAttachmentsOnReply
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             _logger.Debug("Startup");
-            this.Application.Inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
-            this.Application.ActiveExplorer().InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(OutlookExtensions.ParseItemForAttachments);
-            OnTimerUpdateCheck(null);
+            Application.Inspectors.NewInspector += new Microsoft.Office.Interop.Outlook.InspectorsEvents_NewInspectorEventHandler(Inspectors_NewInspector);
+            Application.ActiveExplorer().InlineResponse += new Outlook.ExplorerEvents_10_InlineResponseEventHandler(OutlookExtensions.ParseItemForAttachments);            
         }
 
         private void ThisAddIn_Shutdown(object sender, System.EventArgs e)

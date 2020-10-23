@@ -1,0 +1,48 @@
+<ViewerConfig>
+  <QueryConfig>
+    <QueryParams>
+      <Simple>
+        <Channel>Application</Channel>
+        <EventId>59,45</EventId>
+        <Source>Outlook</Source>
+        <RelativeTimeInfo>0</RelativeTimeInfo>
+        <BySource>False</BySource>
+      </Simple>
+    </QueryParams>
+    <QueryNode>
+      <Name LanguageNeutralValue="OutlookAddInPerformance">OutlookAddInPerformance</Name>
+      <SortConfig Asc="0">
+        <Column Name="Datum und Uhrzeit" Type="System.DateTime" Path="Event/System/TimeCreated/@SystemTime" Visible="">330</Column>
+      </SortConfig>
+      <QueryList>
+        <Query Id="0" Path="Application">
+          <Select Path="Application">*[System[Provider[@Name='Outlook'] and (EventID=59 or EventID=45)]]</Select>
+        </Query>
+      </QueryList>
+    </QueryNode>
+  </QueryConfig>
+  <ResultsConfig>
+    <Columns>
+      <Column Name="Ebene" Type="System.String" Path="Event/System/Level" Visible="">280</Column>
+      <Column Name="Schlüsselwörter" Type="System.String" Path="Event/System/Keywords">70</Column>
+      <Column Name="Datum und Uhrzeit" Type="System.DateTime" Path="Event/System/TimeCreated/@SystemTime" Visible="">330</Column>
+      <Column Name="Quelle" Type="System.String" Path="Event/System/Provider/@Name" Visible="">240</Column>
+      <Column Name="Ereignis-ID" Type="System.UInt32" Path="Event/System/EventID" Visible="">240</Column>
+      <Column Name="Aufgabenkategorie" Type="System.String" Path="Event/System/Task" Visible="">241</Column>
+      <Column Name="Benutzer" Type="System.String" Path="Event/System/Security/@UserID">50</Column>
+      <Column Name="Vorgangscode" Type="System.String" Path="Event/System/Opcode">110</Column>
+      <Column Name="Protokoll" Type="System.String" Path="Event/System/Channel">80</Column>
+      <Column Name="Computer" Type="System.String" Path="Event/System/Computer">170</Column>
+      <Column Name="Prozess-ID" Type="System.UInt32" Path="Event/System/Execution/@ProcessID">70</Column>
+      <Column Name="Thread-ID" Type="System.UInt32" Path="Event/System/Execution/@ThreadID">70</Column>
+      <Column Name="Prozessor-ID" Type="System.UInt32" Path="Event/System/Execution/@ProcessorID">90</Column>
+      <Column Name="Sitzungs-ID" Type="System.UInt32" Path="Event/System/Execution/@SessionID">70</Column>
+      <Column Name="Kernel-Zeit" Type="System.UInt32" Path="Event/System/Execution/@KernelTime">80</Column>
+      <Column Name="Benutzerzeit" Type="System.UInt32" Path="Event/System/Execution/@UserTime">70</Column>
+      <Column Name="Prozessor-Zeit" Type="System.UInt32" Path="Event/System/Execution/@ProcessorTime">100</Column>
+      <Column Name="Korrelations-ID" Type="System.Guid" Path="Event/System/Correlation/@ActivityID">85</Column>
+      <Column Name="Relative Korrelations-ID" Type="System.Guid" Path="Event/System/Correlation/@RelatedActivityID">140</Column>
+      <Column Name="Ereignisquellname" Type="System.String" Path="Event/System/Provider/@EventSourceName">140</Column>
+    </Columns>
+  </ResultsConfig>
+</ViewerConfig>
